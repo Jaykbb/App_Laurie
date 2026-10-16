@@ -1,0 +1,1275 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>BioNeptune - COR 200 Chimie Organique</title>
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=JetBrains+Mono:wght@600;800&display=swap');
+    
+    body {
+      font-family: 'Fredoka', sans-serif;
+      background: radial-gradient(circle at 50% 20%, #064e3b, #022c22, #02110c);
+      min-height: 100vh;
+      color: #ecfdf5;
+      user-select: none;
+    }
+
+    .molecule-font {
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    @keyframes gentleFloat {
+      0%, 100% { transform: translateY(0px) rotate(0deg); }
+      50% { transform: translateY(-5px) rotate(1.2deg); }
+    }
+    .cute-cat-anim {
+      animation: gentleFloat 3s ease-in-out infinite;
+    }
+  </style>
+</head>
+
+<body class="flex items-center justify-center p-2 sm:p-4">
+
+  <div class="w-full max-w-md bg-slate-900/90 backdrop-blur-2xl border-2 border-emerald-500/40 rounded-3xl shadow-[0_0_40px_rgba(16,185,129,0.25)] overflow-hidden flex flex-col h-[94vh] max-h-[850px]">
+    
+    <header class="bg-emerald-950/80 p-3.5 border-b border-emerald-800/50 flex justify-between items-center z-10">
+      <button id="btnNavigationHome" class="flex items-center gap-2 text-emerald-300 hover:text-white transition">
+        <i class="fa-solid fa-flask-vial text-emerald-400 text-lg"></i>
+        <span class="font-bold text-sm tracking-wide">BioCat</span>
+      </button>
+
+      <div class="flex items-center gap-2">
+        <div class="flex items-center gap-1.5 bg-emerald-900/70 border border-emerald-400/30 px-3 py-1 rounded-full text-xs font-bold text-amber-300 shadow-inner">
+          <span>🐟</span>
+          <span id="croquettesDisplay">120 Croquettes</span>
+        </div>
+      </div>
+    </header>
+
+    <main id="appContainer" class="flex-1 overflow-y-auto p-4 sm:p-5 flex flex-col justify-between">
+    </main>
+
+  </div>
+
+  <script>
+    let croquettes = 120;
+    let chatEquipement = {
+      chapeau: 'aucun',
+      sarrau: 'blanc',
+      fiole: 'verte'
+    };
+
+    const ARTICLES_SHOP = [
+      { id: 'noeud_rose', type: 'chapeau', nom: 'Nœud Rose Kawaii', prix: 50, icone: '🎀', desc: 'Un joli ruban rose bonbon' },
+      { id: 'beret', type: 'chapeau', nom: 'Béret d\'Artiste', prix: 80, icone: '🎨', desc: 'Pour les sessions de labo' },
+      { id: 'toque', type: 'chapeau', nom: 'Toque de Chimie', prix: 150, icone: '👨‍🍳', desc: 'Style maître chimiste' },
+      { id: 'rose', type: 'sarrau', nom: 'Sarrau Rose Pastel', prix: 60, icone: '🥼', desc: 'Blouse rose douce' },
+      { id: 'emeraude', type: 'sarrau', nom: 'Sarrau Émeraude', prix: 100, icone: '🌿', desc: 'Look bio-organique' },
+      { id: 'alchimiste', type: 'sarrau', nom: 'Robe Alchimiste', prix: 180, icone: '🔮', desc: 'Pourpre noble' },
+      { id: 'rose', type: 'fiole', nom: 'Potion Fluo Rose', prix: 70, icone: '💖', desc: 'Bulles étincelantes' },
+      { id: 'arc_en_ciel', type: 'fiole', nom: 'Élixir Multicolore', prix: 140, icone: '🌈', desc: 'Changement de phase' }
+    ];
+
+    let articlesAchetes = ['blanc', 'verte', 'aucun'];
+
+    const TOUS_LES_CHAPITRES = [
+      {
+        // ===============================================================
+      // [CHAPITRE 1]
+      // ===============================================================
+        idChapitre: 1,
+        titreChapitre: "Chapitre 1 : Examen COR 200",
+        description: "Nomenclature polyfonctionnelle, stéréochimie R/S, Z/E et aromaticité.",
+        icone: "fa-atom",
+        quizFinal: [
+          {
+            badge: "Nomenclature (Q1 d)",
+            question: "Nommer l'hydrocarbure comportant une double et une triple liaison terminales (Q1 d) :",
+            molecule: "CH₂=C(Me)—CH₂—CH(Me)—C≡C—Me\n[ hept-1-én-5-yne substitué ]",
+            options: [
+              "2,4-diméthylhept-1-én-5-yne",
+              "4,6-diméthylhept-6-én-2-yne",
+              "2,4-diméthylhept-5-yn-1-ène",
+              "3,5-diméthylhept-2-yn-6-ène"
+            ],
+            reponseIndex: 0,
+            gainCroquettes: 25,
+            explication: "L'alcène terminal dicte l'indice 1 devant l'alcyne interne -> 2,4-diméthylhept-1-én-5-yne."
+          },
+          {
+            badge: "Dicétone (Q1 e)",
+            question: "Nommer cette dicétone substituée par une chaîne propylamino et un phényle (Q1 e) :",
+            molecule: "Ph—CH₂—CO—CH₂—CH(NH—Pr)—CH₂—CO—CH₃",
+            options: [
+              "1-phényl-4-(propylamino)heptane-2,6-dione",
+              "7-phényl-4-(propylamino)heptane-2,6-dione",
+              "4-(propylamino)-1-phénylheptane-2,6-dione",
+              "1-benzyl-3-(propylamino)hexane-1,5-dione"
+            ],
+            reponseIndex: 0,
+            gainCroquettes: 30,
+            explication: "Numérotation de droite à gauche pour accorder les plus petits indices aux carbonyles (2,6 au lieu de 2,6 avec phényle en 1) -> 1-phényl-4-(propylamino)heptane-2,6-dione."
+          },
+          {
+            badge: "Nitrile & Alcène (Q1 h)",
+            question: "Quel est le nom IUPAC de cette molécule comportant un nitrile, un alcène, un Cl et un éther (Q1 h) ?",
+            molecule: "NC—CH=CH—CH(Cl)—CH(OMe)—(CH₂)₃—CH₃",
+            options: [
+              "4-chloro-5-méthoxynon-2-ènenitrile",
+              "6-chloro-5-méthoxynon-7-ènenitrile",
+              "5-méthoxy-4-chloronon-2-ènenitrile",
+              "4-chloro-5-méthoxynon-2-ynamide"
+            ],
+            reponseIndex: 0,
+            gainCroquettes: 30,
+            explication: "Le groupe nitrile (-C≡N) fixe le C1. L'alcène est en C2, et 'chloro' précède 'méthoxy' par ordre alphabétique -> 4-chloro-5-méthoxynon-2-ènenitrile."
+          },
+          {
+            badge: "Ester d'Amine (Q1 k)",
+            question: "Nommer cet ester dérivé d'un acide aminé (Q1 k) :",
+            molecule: "H₂N—CH(CH(CH₃)₂)—COOCH₃",
+            options: [
+              "2-amino-3-méthylbutanoate de méthyle",
+              "Méthanoate de 2-amino-3-méthylbutyle",
+              "2-amino-3-méthylpentanoate de méthyle",
+              "Acide 2-amino-3-méthylbutanoïque"
+            ],
+            reponseIndex: 0,
+            gainCroquettes: 25,
+            explication: "Carbone du COOCH₃ = C1. Chaîne principale à 4 carbones (butanoate de méthyle) avec amine en C2 et méthyle en C3."
+          },
+          {
+            badge: "Diacide (Q1 l)",
+            question: "Nommer ce diacide carboxylique dihydroxylé (Q1 l) :",
+            molecule: "HOOC—CH(OH)—CH(OH)—COOH",
+            options: [
+              "Acide 2,3-dihydroxybutane-1,4-dioïque",
+              "Acide 1,4-dihydroxybutanedioïque",
+              "2,3-dihydroxybutanoate de dioïque",
+              "Acide tartroïque"
+            ],
+            reponseIndex: 0,
+            gainCroquettes: 25,
+            explication: "Chaîne à 4 carbones avec deux acides carboxyliques terminaux (1,4-dioïque) et deux hydroxyles en 2 et 3."
+          },
+          {
+            badge: "Chiralité & Méso (Q3)",
+            question: "Pourquoi le (3R,4S)-3,4-diméthylhexane ne possède-t-il pas d'énantiomère (Q3) ?",
+            molecule: "CH₃—CH₂—CH(Me)—CH(Me)—CH₂—CH₃\n(Composé c)",
+            options: [
+              "C'est un composé méso possédant un plan de symétrie",
+              "Il ne possède aucun carbone asymétrique",
+              "La libre rotation autour de C3-C4 l'en empêche",
+              "Il est anti-aromatique"
+            ],
+            reponseIndex: 0,
+            gainCroquettes: 35,
+            explication: "Avec deux centres chiraux identiques de configurations opposées (3R, 4S), la molécule possède un plan de symétrie interne : elle est méso et achirale."
+          },
+          {
+            badge: "Stéréochimie (Q5 j)",
+            question: "Quelles sont les configurations stéréochimiques de l'alcène et du centre chiral (Q5 j) ?",
+            molecule: "NC—CH₂—CH=C(F)—CH(NMe₂)—(CH₂)₃—CH₃\n(Composé j)",
+            options: [
+              "(E, R)",
+              "(Z, S)",
+              "(E, S)",
+              "(Z, R)"
+            ],
+            reponseIndex: 0,
+            gainCroquettes: 35,
+            explication: "Selon les règles CIP, les groupes prioritaires sont opposés sur l'alcène (E) et le carbone 5 portant le NMe₂ est de configuration (R)."
+          },
+          {
+            badge: "Règle de Hückel (Q7 b)",
+            question: "Comment classer la 1,4-dioxine conjuguée selon la règle de Hückel (Q7 b) ?",
+            molecule: "Cycle à 6 chaînons avec 2 doubles liaisons\net 2 atomes d'oxygène conjugués (8 e⁻ pi)",
+            options: [
+              "Anti-aromatique (8 électrons pi)",
+              "Aromatique (6 électrons pi)",
+              "Non-aromatique (hors plan)",
+              "Composé méso"
+            ],
+            reponseIndex: 0,
+            gainCroquettes: 30,
+            explication: "Ce cycle plan conjugué compte 8 électrons pi (système 4n avec n=2), ce qui correspond à un composé anti-aromatique."
+          },
+          {
+            badge: "Aromaticité (Q7 d)",
+            question: "Pourquoi l'indole est-il considéré comme aromatique (Q7 d) ?",
+            molecule: "Noyau bicyclique [Indole]\nSystème conjugué de 10 électrons pi",
+            options: [
+              "Aromatique : respecte la règle 4n+2 (10 e⁻ pi avec le doublet du N)",
+              "Anti-aromatique car il contient 8 électrons pi",
+              "Non-aromatique car l'azote n'est pas hybridé sp²",
+              "Achiral avec plan de symétrie"
+            ],
+            reponseIndex: 0,
+            gainCroquettes: 30,
+            explication: "Le doublet non-liant du N participe au cycle, formant un nuage continu de 10 électrons pi délocalisés (4n+2 avec n=2) -> Aromatique."
+          },
+          {
+            badge: "Positions Benzéniques (Q8 p)",
+            question: "Sur le 2,4,6-tribromotoluène, quelles sont les positions des brome par rapport au méthyle (Q8 p) ?",
+            molecule: "Cycle benzénique portant un -CH₃ en C1\net trois atomes de -Br en C2, C4, C6",
+            options: [
+              "Deux positions ortho et une position para",
+              "Deux positions méta et une position ortho",
+              "Trois positions méta",
+              "Deux positions para et une position ortho"
+            ],
+            reponseIndex: 0,
+            gainCroquettes: 25,
+            explication: "Par rapport au méthyle (C1) : les carbones 2 et 6 sont en position 'ortho', et le carbone 4 opposé est en position 'para'."
+          }
+        ]
+      
+      
+      },
+      {
+        // ===============================================================
+      // [CHAPITRE 2]
+      // ===============================================================
+        idChapitre: 2,
+        titreChapitre: "Chapitre 2 : Acide Aminé",
+        description: "apprentissage des 20 acides aminés.",
+        icone: "fa-dna",
+        
+        quizFinal: [
+          {
+            badge: "Non polaire",
+            question: "Identifie cet acide aminé (nom, codes 3L/1L et catégorie) :",
+            molecule: `<svg viewBox="0 0 180 155" class="w-40 h-36 mx-auto"><style>text{font-family:sans-serif;font-size:13px;fill:#6ee7b7;font-weight:bold;}line,polygon{stroke:#34d399;stroke-width:2;fill:none;}</style>
+              <text x="90" y="20" text-anchor="middle">COO⁻</text>
+              <line x1="90" y1="25" x2="90" y2="42"/>
+              <text x="40" y="55" text-anchor="middle">⁺H₃N</text>
+              <line x1="62" y1="50" x2="80" y2="50"/>
+              <text x="90" y="55" text-anchor="middle">C</text>
+              <line x1="100" y1="50" x2="118" y2="50"/>
+              <text x="128" y="55" text-anchor="middle">H</text>
+              <line x1="90" y1="60" x2="90" y2="78"/>
+              <text x="90" y="92" text-anchor="middle">CH</text>
+              <line x1="80" y1="97" x2="65" y2="115"/>
+              <line x1="100" y1="97" x2="115" y2="115"/>
+              <text x="55" y="130" text-anchor="middle">H₃C</text>
+              <text x="125" y="130" text-anchor="middle">CH₃</text>
+            </svg>`,
+            options: [
+              "Leucine | Leu (L) | Non polaire",
+              "Valine | Val (V) | Non polaire",
+              "Isoleucine | Ile (I) | Non polaire",
+              "Thréonine | Thr (T) | Polaire non chargé"
+            ],
+            reponseIndex: 1,
+            gainCroquettes: 25,
+            explication: "La Valine (Val, V) possède une chaîne isopropyle -CH(CH₃)₂. Elle est non polaire."
+          },
+
+          // --- 2. ISOLEUCINE ---
+          {
+            badge: "Non polaire",
+            question: "Identifie cet acide aminé (nom, codes 3L/1L et catégorie) :",
+            molecule: `<svg viewBox="0 0 180 185" class="w-40 h-40 mx-auto"><style>text{font-family:sans-serif;font-size:13px;fill:#6ee7b7;font-weight:bold;}line{stroke:#34d399;stroke-width:2;}</style>
+              <text x="90" y="20" text-anchor="middle">COO⁻</text>
+              <line x1="90" y1="25" x2="90" y2="42"/>
+              <text x="40" y="55" text-anchor="middle">⁺H₃N</text>
+              <line x1="62" y1="50" x2="80" y2="50"/>
+              <text x="90" y="55" text-anchor="middle">C</text>
+              <line x1="100" y1="50" x2="118" y2="50"/>
+              <text x="128" y="55" text-anchor="middle">H</text>
+              <line x1="90" y1="60" x2="90" y2="78"/>
+              <text x="90" y="92" text-anchor="middle">CH</text>
+              <line x1="80" y1="97" x2="65" y2="115"/>
+              <line x1="100" y1="97" x2="115" y2="115"/>
+              <text x="55" y="130" text-anchor="middle">H₃C</text>
+              <text x="125" y="130" text-anchor="middle">CH₂</text>
+              <line x1="125" y1="135" x2="125" y2="152"/>
+              <text x="125" y="168" text-anchor="middle">CH₃</text>
+            </svg>`,
+            options: [
+              "Valine | Val (V) | Non polaire",
+              "Leucine | Leu (L) | Non polaire",
+              "Isoleucine | Ile (I) | Non polaire",
+              "Méthionine | Met (M) | Non polaire"
+            ],
+            reponseIndex: 2,
+            gainCroquettes: 25,
+            explication: "L'Isoleucine (Ile, I) possède une chaîne sec-butyle -CH(CH₃)-CH₂-CH₃. Elle est non polaire."
+          },
+
+          // --- 3. LEUCINE ---
+          {
+            badge: "Non polaire",
+            question: "Identifie cet acide aminé (nom, codes 3L/1L et catégorie) :",
+            molecule: `<svg viewBox="0 0 180 185" class="w-40 h-40 mx-auto"><style>text{font-family:sans-serif;font-size:13px;fill:#6ee7b7;font-weight:bold;}line{stroke:#34d399;stroke-width:2;}</style>
+              <text x="90" y="20" text-anchor="middle">COO⁻</text>
+              <line x1="90" y1="25" x2="90" y2="42"/>
+              <text x="40" y="55" text-anchor="middle">⁺H₃N</text>
+              <line x1="62" y1="50" x2="80" y2="50"/>
+              <text x="90" y="55" text-anchor="middle">C</text>
+              <line x1="100" y1="50" x2="118" y2="50"/>
+              <text x="128" y="55" text-anchor="middle">H</text>
+              <line x1="90" y1="60" x2="90" y2="78"/>
+              <text x="90" y="92" text-anchor="middle">CH₂</text>
+              <line x1="90" y1="97" x2="90" y2="115"/>
+              <text x="90" y="129" text-anchor="middle">CH</text>
+              <line x1="80" y1="134" x2="65" y2="152"/>
+              <line x1="100" y1="134" x2="115" y2="152"/>
+              <text x="55" y="167" text-anchor="middle">H₃C</text>
+              <text x="125" y="167" text-anchor="middle">CH₃</text>
+            </svg>`,
+            options: [
+              "Leucine | Leu (L) | Non polaire",
+              "Isoleucine | Ile (I) | Non polaire",
+              "Valine | Val (V) | Non polaire",
+              "Alanine | Ala (A) | Non polaire"
+            ],
+            reponseIndex: 0,
+            gainCroquettes: 25,
+            explication: "La Leucine (Leu, L) possède un groupement isobutyle -CH₂-CH(CH₃)₂. Elle est non polaire."
+          },
+
+          // --- 4. MÉTHIONINE ---
+          {
+            badge: "Non polaire",
+            question: "Identifie cet acide aminé (nom, codes 3L/1L et catégorie) :",
+            molecule: `<svg viewBox="0 0 180 215" class="w-40 h-44 mx-auto"><style>text{font-family:sans-serif;font-size:13px;fill:#6ee7b7;font-weight:bold;}line{stroke:#34d399;stroke-width:2;}</style>
+              <text x="90" y="20" text-anchor="middle">COO⁻</text>
+              <line x1="90" y1="25" x2="90" y2="42"/>
+              <text x="40" y="55" text-anchor="middle">⁺H₃N</text>
+              <line x1="62" y1="50" x2="80" y2="50"/>
+              <text x="90" y="55" text-anchor="middle">C</text>
+              <line x1="100" y1="50" x2="118" y2="50"/>
+              <text x="128" y="55" text-anchor="middle">H</text>
+              <line x1="90" y1="60" x2="90" y2="76"/>
+              <text x="90" y="90" text-anchor="middle">CH₂</text>
+              <line x1="90" y1="95" x2="90" y2="111"/>
+              <text x="90" y="125" text-anchor="middle">CH₂</text>
+              <line x1="90" y1="130" x2="90" y2="146"/>
+              <text x="90" y="160" text-anchor="middle">S</text>
+              <line x1="90" y1="165" x2="90" y2="181"/>
+              <text x="90" y="195" text-anchor="middle">CH₃</text>
+            </svg>`,
+            options: [
+              "Cystéine | Cys (C) | Polaire non chargé",
+              "Méthionine | Met (M) | Non polaire",
+              "Lysine | Lys (K) | Polaire chargé + (Basique)",
+              "Glutamine | Gln (Q) | Polaire non chargé"
+            ],
+            reponseIndex: 1,
+            gainCroquettes: 25,
+            explication: "La Méthionine (Met, M) comporte un groupement thioéther (-CH₂-CH₂-S-CH₃). Elle est non polaire."
+          },
+
+          // --- 5. PHÉNYLALANINE ---
+          {
+            badge: "Non polaire",
+            question: "Identifie cet acide aminé (nom, codes 3L/1L et catégorie) :",
+            molecule: `<svg viewBox="0 0 180 195" class="w-40 h-40 mx-auto"><style>text{font-family:sans-serif;font-size:13px;fill:#6ee7b7;font-weight:bold;}line,polygon{stroke:#34d399;stroke-width:2;fill:none;}</style>
+              <text x="90" y="20" text-anchor="middle">COO⁻</text>
+              <line x1="90" y1="25" x2="90" y2="42"/>
+              <text x="40" y="55" text-anchor="middle">⁺H₃N</text>
+              <line x1="62" y1="50" x2="80" y2="50"/>
+              <text x="90" y="55" text-anchor="middle">C</text>
+              <line x1="100" y1="50" x2="118" y2="50"/>
+              <text x="128" y="55" text-anchor="middle">H</text>
+              <line x1="90" y1="60" x2="90" y2="76"/>
+              <text x="90" y="90" text-anchor="middle">CH₂</text>
+              <line x1="90" y1="95" x2="90" y2="112"/>
+              <polygon points="90,112 114,126 114,154 90,168 66,154 66,126"/>
+              <line x1="90" y1="118" x2="109" y2="129"/>
+              <line x1="109" y1="151" x2="90" y2="162"/>
+              <line x1="71" y1="151" x2="71" y2="129"/>
+            </svg>`,
+            options: [
+              "Tyrosine | Tyr (Y) | Polaire non chargé",
+              "Tryptophane | Trp (W) | Polaire non chargé",
+              "Phénylalanine | Phe (F) | Non polaire",
+              "Proline | Pro (P) | Non polaire"
+            ],
+            reponseIndex: 2,
+            gainCroquettes: 25,
+            explication: "La Phénylalanine (Phe, F) possède un cycle benzénique lié à un -CH₂-. Elle est non polaire."
+          },
+
+          // --- 6. GLYCINE ---
+          {
+            badge: "Non polaire",
+            question: "Identifie cet acide aminé (nom, codes 3L/1L et catégorie) :",
+            molecule: `<svg viewBox="0 0 180 120" class="w-40 h-28 mx-auto"><style>text{font-family:sans-serif;font-size:13px;fill:#6ee7b7;font-weight:bold;}line{stroke:#34d399;stroke-width:2;}</style>
+              <text x="90" y="25" text-anchor="middle">COO⁻</text>
+              <line x1="90" y1="30" x2="90" y2="47"/>
+              <text x="40" y="60" text-anchor="middle">⁺H₃N</text>
+              <line x1="62" y1="55" x2="80" y2="55"/>
+              <text x="90" y="60" text-anchor="middle">C</text>
+              <line x1="100" y1="55" x2="118" y2="55"/>
+              <text x="128" y="60" text-anchor="middle">H</text>
+              <line x1="90" y1="65" x2="90" y2="83"/>
+              <text x="90" y="98" text-anchor="middle">H</text>
+            </svg>`,
+            options: [
+              "Glycine | Gly (G) | Non polaire",
+              "Alanine | Ala (A) | Non polaire",
+              "Sérine | Ser (S) | Polaire non chargé",
+              "Valine | Val (V) | Non polaire"
+            ],
+            reponseIndex: 0,
+            gainCroquettes: 25,
+            explication: "La Glycine (Gly, G) porte un simple atome d'hydrogène (H) comme chaîne latérale. Elle est non polaire."
+          },
+
+          // --- 7. ALANINE ---
+          {
+            badge: "Non polaire",
+            question: "Identifie cet acide aminé (nom, codes 3L/1L et catégorie) :",
+            molecule: `<svg viewBox="0 0 180 120" class="w-40 h-28 mx-auto"><style>text{font-family:sans-serif;font-size:13px;fill:#6ee7b7;font-weight:bold;}line{stroke:#34d399;stroke-width:2;}</style>
+              <text x="90" y="25" text-anchor="middle">COO⁻</text>
+              <line x1="90" y1="30" x2="90" y2="47"/>
+              <text x="40" y="60" text-anchor="middle">⁺H₃N</text>
+              <line x1="62" y1="55" x2="80" y2="55"/>
+              <text x="90" y="60" text-anchor="middle">C</text>
+              <line x1="100" y1="55" x2="118" y2="55"/>
+              <text x="128" y="60" text-anchor="middle">H</text>
+              <line x1="90" y1="65" x2="90" y2="83"/>
+              <text x="90" y="98" text-anchor="middle">CH₃</text>
+            </svg>`,
+            options: [
+              "Glycine | Gly (G) | Non polaire",
+              "Valine | Val (V) | Non polaire",
+              "Sérine | Ser (S) | Polaire non chargé",
+              "Alanine | Ala (A) | Non polaire"
+            ],
+            reponseIndex: 3,
+            gainCroquettes: 25,
+            explication: "L'Alanine (Ala, A) possède un groupe méthyle (-CH₃) comme chaîne latérale. Elle est non polaire."
+          },
+
+          // --- 8. PROLINE ---
+          {
+            badge: "Non polaire",
+            question: "Identifie cet acide aminé (nom, codes 3L/1L et catégorie) :",
+            molecule: `<svg viewBox="0 0 180 150" class="w-40 h-36 mx-auto"><style>text{font-family:sans-serif;font-size:13px;fill:#6ee7b7;font-weight:bold;}line{stroke:#34d399;stroke-width:2;}</style>
+              <text x="95" y="22" text-anchor="middle">COO⁻</text>
+              <line x1="95" y1="27" x2="95" y2="43"/>
+              <text x="45" y="55" text-anchor="middle">⁺H₂N</text>
+              <line x1="65" y1="50" x2="85" y2="50"/>
+              <text x="95" y="55" text-anchor="middle">C</text>
+              <line x1="105" y1="50" x2="123" y2="50"/>
+              <text x="133" y="55" text-anchor="middle">H</text>
+              <line x1="50" y1="62" x2="50" y2="100"/>
+              <line x1="102" y1="60" x2="118" y2="78"/>
+              <text x="128" y="90" text-anchor="middle">CH₂</text>
+              <line x1="118" y1="95" x2="102" y2="112"/>
+              <text x="50" y="116" text-anchor="middle">H₂C</text>
+              <line x1="65" y1="112" x2="82" y2="112"/>
+              <text x="96" y="116" text-anchor="middle">CH₂</text>
+            </svg>`,
+            options: [
+              "Histidine | His (H) | Polaire chargé + (Basique)",
+              "Proline | Pro (P) | Non polaire",
+              "Tryptophane | Trp (W) | Polaire non chargé",
+              "Phénylalanine | Phe (F) | Non polaire"
+            ],
+            reponseIndex: 1,
+            gainCroquettes: 30,
+            explication: "La Proline (Pro, P) possède une chaîne latérale cyclique reliée à la fonction amine (⁺H₂N). Elle est non polaire."
+          },
+
+          // --- 9. TRYPTOPHANE ---
+          {
+            badge: "Polaire, non-chargé",
+            question: "Identifie cet acide aminé (nom, codes 3L/1L et catégorie) :",
+            molecule: `<svg viewBox="0 0 180 220" class="w-40 h-44 mx-auto"><style>text{font-family:sans-serif;font-size:12px;fill:#6ee7b7;font-weight:bold;}line,polygon{stroke:#34d399;stroke-width:2;fill:none;}</style>
+              <text x="80" y="18" text-anchor="middle">COO⁻</text>
+              <line x1="80" y1="22" x2="80" y2="38"/>
+              <text x="32" y="50" text-anchor="middle">⁺H₃N</text>
+              <line x1="52" y1="45" x2="70" y2="45"/>
+              <text x="80" y="50" text-anchor="middle">C</text>
+              <line x1="90" y1="45" x2="108" y2="45"/>
+              <text x="118" y="50" text-anchor="middle">H</text>
+              <line x1="80" y1="55" x2="80" y2="70"/>
+              <text x="80" y="82" text-anchor="middle">CH₂</text>
+              <line x1="80" y1="86" x2="80" y2="102"/>
+              <text x="80" y="114" text-anchor="middle">C</text>
+              <line x1="90" y1="108" x2="108" y2="108"/>
+              <line x1="90" y1="112" x2="108" y2="112"/>
+              <text x="120" y="114" text-anchor="middle">CH</text>
+              <line x1="125" y1="118" x2="125" y2="135"/>
+              <text x="130" y="147" text-anchor="middle">NH</text>
+              <line x1="115" y1="148" x2="98" y2="158"/>
+              <line x1="75" y1="118" x2="75" y2="145"/>
+              <polygon points="75,145 98,158 98,185 75,198 52,185 52,158"/>
+              <line x1="75" y1="151" x2="93" y2="161"/>
+              <line x1="93" y1="182" x2="75" y2="192"/>
+              <line x1="57" y1="182" x2="57" y2="161"/>
+            </svg>`,
+            options: [
+              "Tryptophane | Trp (W) | Polaire non chargé",
+              "Phénylalanine | Phe (F) | Non polaire",
+              "Histidine | His (H) | Polaire chargé + (Basique)",
+              "Tyrosine | Tyr (Y) | Polaire non chargé"
+            ],
+            reponseIndex: 0,
+            gainCroquettes: 30,
+            explication: "Le Tryptophane (Trp, W) possède un double cycle indole avec un groupe NH. Dans ton tableau, il est classé parmi les Polaires, non-chargés."
+          },
+
+          // --- 10. TYROSINE ---
+          {
+            badge: "Polaire, non-chargé",
+            question: "Identifie cet acide aminé (nom, codes 3L/1L et catégorie) :",
+            molecule: `<svg viewBox="0 0 180 215" class="w-40 h-44 mx-auto"><style>text{font-family:sans-serif;font-size:13px;fill:#6ee7b7;font-weight:bold;}line,polygon{stroke:#34d399;stroke-width:2;fill:none;}</style>
+              <text x="90" y="20" text-anchor="middle">COO⁻</text>
+              <line x1="90" y1="25" x2="90" y2="42"/>
+              <text x="40" y="55" text-anchor="middle">⁺H₃N</text>
+              <line x1="62" y1="50" x2="80" y2="50"/>
+              <text x="90" y="55" text-anchor="middle">C</text>
+              <line x1="100" y1="50" x2="118" y2="50"/>
+              <text x="128" y="55" text-anchor="middle">H</text>
+              <line x1="90" y1="60" x2="90" y2="76"/>
+              <text x="90" y="90" text-anchor="middle">CH₂</text>
+              <line x1="90" y1="95" x2="90" y2="112"/>
+              <polygon points="90,112 114,126 114,154 90,168 66,154 66,126"/>
+              <line x1="90" y1="118" x2="109" y2="129"/>
+              <line x1="109" y1="151" x2="90" y2="162"/>
+              <line x1="71" y1="151" x2="71" y2="129"/>
+              <line x1="90" y1="168" x2="90" y2="185"/>
+              <text x="90" y="200" text-anchor="middle">OH</text>
+            </svg>`,
+            options: [
+              "Phénylalanine | Phe (F) | Non polaire",
+              "Sérine | Ser (S) | Polaire non chargé",
+              "Tyrosine | Tyr (Y) | Polaire non chargé",
+              "Thréonine | Thr (T) | Polaire non chargé"
+            ],
+            reponseIndex: 2,
+            gainCroquettes: 25,
+            explication: "La Tyrosine (Tyr, Y) possède un cycle benzénique terminé par une fonction alcool (-OH), soit un phénol. Elle est polaire non chargée."
+          },
+
+          // --- 11. SÉRINE ---
+          {
+            badge: "Polaire, non-chargé",
+            question: "Identifie cet acide aminé (nom, codes 3L/1L et catégorie) :",
+            molecule: `<svg viewBox="0 0 180 120" class="w-40 h-28 mx-auto"><style>text{font-family:sans-serif;font-size:13px;fill:#6ee7b7;font-weight:bold;}line{stroke:#34d399;stroke-width:2;}</style>
+              <text x="90" y="25" text-anchor="middle">COO⁻</text>
+              <line x1="90" y1="30" x2="90" y2="47"/>
+              <text x="40" y="60" text-anchor="middle">⁺H₃N</text>
+              <line x1="62" y1="55" x2="80" y2="55"/>
+              <text x="90" y="60" text-anchor="middle">C</text>
+              <line x1="100" y1="55" x2="118" y2="55"/>
+              <text x="128" y="60" text-anchor="middle">H</text>
+              <line x1="90" y1="65" x2="90" y2="83"/>
+              <text x="95" y="98" text-anchor="middle">CH₂OH</text>
+            </svg>`,
+            options: [
+              "Thréonine | Thr (T) | Polaire non chargé",
+              "Sérine | Ser (S) | Polaire non chargé",
+              "Cystéine | Cys (C) | Polaire non chargé",
+              "Alanine | Ala (A) | Non polaire"
+            ],
+            reponseIndex: 1,
+            gainCroquettes: 25,
+            explication: "La Sérine (Ser, S) porte un groupement hydroxyméthyle (-CH₂OH). Elle est polaire non chargée."
+          },
+
+          // --- 12. THRÉONINE ---
+          {
+            badge: "Polaire, non-chargé",
+            question: "Identifie cet acide aminé (nom, codes 3L/1L et catégorie) :",
+            molecule: `<svg viewBox="0 0 180 155" class="w-40 h-36 mx-auto"><style>text{font-family:sans-serif;font-size:13px;fill:#6ee7b7;font-weight:bold;}line{stroke:#34d399;stroke-width:2;}</style>
+              <text x="90" y="20" text-anchor="middle">COO⁻</text>
+              <line x1="90" y1="25" x2="90" y2="42"/>
+              <text x="40" y="55" text-anchor="middle">⁺H₃N</text>
+              <line x1="62" y1="50" x2="80" y2="50"/>
+              <text x="90" y="55" text-anchor="middle">C</text>
+              <line x1="100" y1="50" x2="118" y2="50"/>
+              <text x="128" y="55" text-anchor="middle">H</text>
+              <line x1="90" y1="60" x2="90" y2="78"/>
+              <text x="102" y="92" text-anchor="middle">CHOH</text>
+              <line x1="90" y1="97" x2="90" y2="115"/>
+              <text x="90" y="130" text-anchor="middle">CH₃</text>
+            </svg>`,
+            options: [
+              "Sérine | Ser (S) | Polaire non chargé",
+              "Valine | Val (V) | Non polaire",
+              "Cystéine | Cys (C) | Polaire non chargé",
+              "Thréonine | Thr (T) | Polaire non chargé"
+            ],
+            reponseIndex: 3,
+            gainCroquettes: 25,
+            explication: "La Thréonine (Thr, T) possède une chaîne -CH(OH)-CH₃. Elle est polaire non chargée."
+          },
+
+          // --- 13. CYSTÉINE ---
+          {
+            badge: "Polaire, non-chargé",
+            question: "Identifie cet acide aminé (nom, codes 3L/1L et catégorie) :",
+            molecule: `<svg viewBox="0 0 180 120" class="w-40 h-28 mx-auto"><style>text{font-family:sans-serif;font-size:13px;fill:#6ee7b7;font-weight:bold;}line{stroke:#34d399;stroke-width:2;}</style>
+              <text x="90" y="25" text-anchor="middle">COO⁻</text>
+              <line x1="90" y1="30" x2="90" y2="47"/>
+              <text x="40" y="60" text-anchor="middle">⁺H₃N</text>
+              <line x1="62" y1="55" x2="80" y2="55"/>
+              <text x="90" y="60" text-anchor="middle">C</text>
+              <line x1="100" y1="55" x2="118" y2="55"/>
+              <text x="128" y="60" text-anchor="middle">H</text>
+              <line x1="90" y1="65" x2="90" y2="83"/>
+              <text x="95" y="98" text-anchor="middle">CH₂SH</text>
+            </svg>`,
+            options: [
+              "Cystéine | Cys (C) | Polaire non chargé",
+              "Méthionine | Met (M) | Non polaire",
+              "Sérine | Ser (S) | Polaire non chargé",
+              "Alanine | Ala (A) | Non polaire"
+            ],
+            reponseIndex: 0,
+            gainCroquettes: 25,
+            explication: "La Cystéine (Cys, C) possède un groupement thiol (-CH₂SH). Elle est classée polaire non chargée."
+          },
+
+          // --- 14. ASPARAGINE ---
+          {
+            badge: "Polaire, non-chargé",
+            question: "Identifie cet acide aminé (nom, codes 3L/1L et catégorie) :",
+            molecule: `<svg viewBox="0 0 180 175" class="w-40 h-36 mx-auto"><style>text{font-family:sans-serif;font-size:13px;fill:#6ee7b7;font-weight:bold;}line{stroke:#34d399;stroke-width:2;}</style>
+              <text x="90" y="20" text-anchor="middle">COO⁻</text>
+              <line x1="90" y1="25" x2="90" y2="42"/>
+              <text x="40" y="55" text-anchor="middle">⁺H₃N</text>
+              <line x1="62" y1="50" x2="80" y2="50"/>
+              <text x="90" y="55" text-anchor="middle">C</text>
+              <line x1="100" y1="50" x2="118" y2="50"/>
+              <text x="128" y="55" text-anchor="middle">H</text>
+              <line x1="90" y1="60" x2="90" y2="78"/>
+              <text x="90" y="92" text-anchor="middle">CH₂</text>
+              <line x1="90" y1="97" x2="90" y2="115"/>
+              <text x="90" y="128" text-anchor="middle">C</text>
+              <line x1="82" y1="132" x2="67" y2="148"/>
+              <line x1="97" y1="130" x2="113" y2="146"/>
+              <line x1="100" y1="126" x2="116" y2="142"/>
+              <text x="55" y="162" text-anchor="middle">H₂N</text>
+              <text x="124" y="160" text-anchor="middle">O</text>
+            </svg>`,
+            options: [
+              "Glutamine | Gln (Q) | Polaire non chargé",
+              "Acide aspartique | Asp (D) | Polaire chargé - (Acide)",
+              "Asparagine | Asn (N) | Polaire non chargé",
+              "Histidine | His (H) | Polaire chargé + (Basique)"
+            ],
+            reponseIndex: 2,
+            gainCroquettes: 25,
+            explication: "L'Asparagine (Asn, N) possède un seul -CH₂- suivi d'une fonction amide (-CONH₂). Elle est polaire non chargée."
+          },
+
+          // --- 15. GLUTAMINE ---
+          {
+            badge: "Polaire, non-chargé",
+            question: "Identifie cet acide aminé (nom, codes 3L/1L et catégorie) :",
+            molecule: `<svg viewBox="0 0 180 205" class="w-40 h-40 mx-auto"><style>text{font-family:sans-serif;font-size:13px;fill:#6ee7b7;font-weight:bold;}line{stroke:#34d399;stroke-width:2;}</style>
+              <text x="90" y="20" text-anchor="middle">COO⁻</text>
+              <line x1="90" y1="25" x2="90" y2="42"/>
+              <text x="40" y="55" text-anchor="middle">⁺H₃N</text>
+              <line x1="62" y1="50" x2="80" y2="50"/>
+              <text x="90" y="55" text-anchor="middle">C</text>
+              <line x1="100" y1="50" x2="118" y2="50"/>
+              <text x="128" y="55" text-anchor="middle">H</text>
+              <line x1="90" y1="60" x2="90" y2="76"/>
+              <text x="90" y="90" text-anchor="middle">CH₂</text>
+              <line x1="90" y1="95" x2="90" y2="111"/>
+              <text x="90" y="125" text-anchor="middle">CH₂</text>
+              <line x1="90" y1="130" x2="90" y2="146"/>
+              <text x="90" y="160" text-anchor="middle">C</text>
+              <line x1="82" y1="164" x2="67" y2="180"/>
+              <line x1="97" y1="162" x2="113" y2="178"/>
+              <line x1="100" y1="158" x2="116" y2="174"/>
+              <text x="55" y="194" text-anchor="middle">H₂N</text>
+              <text x="124" y="192" text-anchor="middle">O</text>
+            </svg>`,
+            options: [
+              "Asparagine | Asn (N) | Polaire non chargé",
+              "Glutamine | Gln (Q) | Polaire non chargé",
+              "Acide glutamique | Glu (E) | Polaire chargé - (Acide)",
+              "Lysine | Lys (K) | Polaire chargé + (Basique)"
+            ],
+            reponseIndex: 1,
+            gainCroquettes: 25,
+            explication: "La Glutamine (Gln, Q) comporte deux -CH₂- suivis d'une fonction amide (-CONH₂). Elle est polaire non chargée."
+          },
+
+          // --- 16. ARGININE ---
+          {
+            badge: "Polaire, chargé + (Basique)",
+            question: "Identifie cet acide aminé (nom, codes 3L/1L et catégorie) :",
+            molecule: `<svg viewBox="0 0 180 235" class="w-40 h-44 mx-auto"><style>text{font-family:sans-serif;font-size:12px;fill:#6ee7b7;font-weight:bold;}line{stroke:#34d399;stroke-width:2;}</style>
+              <text x="90" y="18" text-anchor="middle">COO⁻</text>
+              <line x1="90" y1="22" x2="90" y2="38"/>
+              <text x="40" y="50" text-anchor="middle">⁺H₃N</text>
+              <line x1="62" y1="45" x2="80" y2="45"/>
+              <text x="90" y="50" text-anchor="middle">C</text>
+              <line x1="100" y1="45" x2="118" y2="45"/>
+              <text x="128" y="50" text-anchor="middle">H</text>
+              <line x1="90" y1="54" x2="90" y2="68"/>
+              <text x="90" y="80" text-anchor="middle">CH₂</text>
+              <line x1="90" y1="84" x2="90" y2="98"/>
+              <text x="90" y="110" text-anchor="middle">CH₂</text>
+              <line x1="90" y1="114" x2="90" y2="128"/>
+              <text x="90" y="140" text-anchor="middle">CH₂</text>
+              <line x1="90" y1="144" x2="90" y2="158"/>
+              <text x="90" y="170" text-anchor="middle">NH</text>
+              <line x1="90" y1="174" x2="90" y2="190"/>
+              <text x="45" y="205" text-anchor="middle">H₂N</text>
+              <line x1="62" y1="200" x2="80" y2="200"/>
+              <text x="90" y="205" text-anchor="middle">C</text>
+              <line x1="100" y1="198" x2="116" y2="198"/>
+              <line x1="100" y1="202" x2="116" y2="202"/>
+              <text x="138" y="205" text-anchor="middle">NH₂⁺</text>
+            </svg>`,
+            options: [
+              "Lysine | Lys (K) | Polaire chargé + (Basique)",
+              "Histidine | His (H) | Polaire chargé + (Basique)",
+              "Glutamine | Gln (Q) | Polaire non chargé",
+              "Arginine | Arg (R) | Polaire chargé + (Basique)"
+            ],
+            reponseIndex: 3,
+            gainCroquettes: 30,
+            explication: "L'Arginine (Arg, R) possède 3 chaînons CH₂ suivis d'un groupe guanidinium (-NH-C(=NH₂⁺)NH₂). C'est une base chargée positivement."
+          },
+
+          // --- 17. LYSINE ---
+          {
+            badge: "Polaire, chargé + (Basique)",
+            question: "Identifie cet acide aminé (nom, codes 3L/1L et catégorie) :",
+            molecule: `<svg viewBox="0 0 180 235" class="w-40 h-44 mx-auto"><style>text{font-family:sans-serif;font-size:12px;fill:#6ee7b7;font-weight:bold;}line{stroke:#34d399;stroke-width:2;}</style>
+              <text x="90" y="18" text-anchor="middle">COO⁻</text>
+              <line x1="90" y1="22" x2="90" y2="38"/>
+              <text x="40" y="50" text-anchor="middle">⁺H₃N</text>
+              <line x1="62" y1="45" x2="80" y2="45"/>
+              <text x="90" y="50" text-anchor="middle">C</text>
+              <line x1="100" y1="45" x2="118" y2="45"/>
+              <text x="128" y="50" text-anchor="middle">H</text>
+              <line x1="90" y1="54" x2="90" y2="68"/>
+              <text x="90" y="80" text-anchor="middle">CH₂</text>
+              <line x1="90" y1="84" x2="90" y2="98"/>
+              <text x="90" y="110" text-anchor="middle">CH₂</text>
+              <line x1="90" y1="114" x2="90" y2="128"/>
+              <text x="90" y="140" text-anchor="middle">CH₂</text>
+              <line x1="90" y1="144" x2="90" y2="158"/>
+              <text x="90" y="170" text-anchor="middle">CH₂</text>
+              <line x1="90" y1="174" x2="90" y2="190"/>
+              <text x="95" y="205" text-anchor="middle">NH₃⁺</text>
+            </svg>`,
+            options: [
+              "Lysine | Lys (K) | Polaire chargé + (Basique)",
+              "Arginine | Arg (R) | Polaire chargé + (Basique)",
+              "Histidine | His (H) | Polaire chargé + (Basique)",
+              "Méthionine | Met (M) | Non polaire"
+            ],
+            reponseIndex: 0,
+            gainCroquettes: 30,
+            explication: "La Lysine (Lys, K) possède 4 chaînons -CH₂- terminés par un groupe ammonium (-NH₃⁺). C'est un acide aminé basique chargé positivement."
+          },
+
+          // --- 18. HISTIDINE ---
+          {
+            badge: "Polaire, chargé + (Basique)",
+            question: "Identifie cet acide aminé (nom, codes 3L/1L et catégorie) :",
+            molecule: `<svg viewBox="0 0 180 200" class="w-40 h-40 mx-auto"><style>text{font-family:sans-serif;font-size:12px;fill:#6ee7b7;font-weight:bold;}line{stroke:#34d399;stroke-width:2;}</style>
+              <text x="90" y="18" text-anchor="middle">COO⁻</text>
+              <line x1="90" y1="22" x2="90" y2="38"/>
+              <text x="40" y="50" text-anchor="middle">⁺H₃N</text>
+              <line x1="62" y1="45" x2="80" y2="45"/>
+              <text x="90" y="50" text-anchor="middle">C</text>
+              <line x1="100" y1="45" x2="118" y2="45"/>
+              <text x="128" y="50" text-anchor="middle">H</text>
+              <line x1="90" y1="54" x2="90" y2="70"/>
+              <text x="90" y="82" text-anchor="middle">CH₂</text>
+              <line x1="90" y1="86" x2="90" y2="104"/>
+              <text x="90" y="116" text-anchor="middle">C</text>
+              <line x1="98" y1="112" x2="116" y2="112"/>
+              <text x="130" y="116" text-anchor="middle">NH</text>
+              <line x1="86" y1="122" x2="86" y2="150"/>
+              <line x1="90" y1="122" x2="90" y2="150"/>
+              <text x="82" y="164" text-anchor="middle">HC</text>
+              <line x1="95" y1="160" x2="114" y2="160"/>
+              <text x="132" y="164" text-anchor="middle">NH⁺</text>
+              <line x1="135" y1="120" x2="148" y2="134"/>
+              <text x="155" y="145" text-anchor="middle">CH</text>
+              <line x1="148" y1="147" x2="135" y2="154"/>
+              <line x1="145" y1="144" x2="132" y2="151"/>
+            </svg>`,
+            options: [
+              "Proline | Pro (P) | Non polaire",
+              "Histidine | His (H) | Polaire chargé + (Basique)",
+              "Tryptophane | Trp (W) | Polaire non chargé",
+              "Arginine | Arg (R) | Polaire chargé + (Basique)"
+            ],
+            reponseIndex: 1,
+            gainCroquettes: 30,
+            explication: "L'Histidine (His, H) comporte un cycle imidazole protoné positively (NH⁺). C'est un acide aminé basique chargé positivement."
+          },
+
+          // --- 19. ACIDE ASPARTIQUE ---
+          {
+            badge: "Polaire, chargé - (Acide)",
+            question: "Identifie cet acide aminé (nom, codes 3L/1L et catégorie) :",
+            molecule: `<svg viewBox="0 0 180 155" class="w-40 h-36 mx-auto"><style>text{font-family:sans-serif;font-size:13px;fill:#6ee7b7;font-weight:bold;}line{stroke:#34d399;stroke-width:2;}</style>
+              <text x="90" y="20" text-anchor="middle">COO⁻</text>
+              <line x1="90" y1="25" x2="90" y2="42"/>
+              <text x="40" y="55" text-anchor="middle">⁺H₃N</text>
+              <line x1="62" y1="50" x2="80" y2="50"/>
+              <text x="90" y="55" text-anchor="middle">C</text>
+              <line x1="100" y1="50" x2="118" y2="50"/>
+              <text x="128" y="55" text-anchor="middle">H</text>
+              <line x1="90" y1="60" x2="90" y2="78"/>
+              <text x="90" y="92" text-anchor="middle">CH₂</text>
+              <line x1="90" y1="97" x2="90" y2="115"/>
+              <text x="95" y="130" text-anchor="middle">COO⁻</text>
+            </svg>`,
+            options: [
+              "Acide glutamique | Glu (E) | Polaire chargé - (Acide)",
+              "Asparagine | Asn (N) | Polaire non chargé",
+              "Acide aspartique | Asp (D) | Polaire chargé - (Acide)",
+              "Sérine | Ser (S) | Polaire non chargé"
+            ],
+            reponseIndex: 2,
+            gainCroquettes: 30,
+            explication: "L'Acide aspartique (Asp, D) possède une chaîne -CH₂-COO⁻. C'est un acide aminé polaire chargé négativement (acide)."
+          },
+
+          // --- 20. ACIDE GLUTAMIQUE ---
+          {
+            badge: "Polaire, chargé - (Acide)",
+            question: "Identifie cet acide aminé (nom, codes 3L/1L et catégorie) :",
+            molecule: `<svg viewBox="0 0 180 185" class="w-40 h-40 mx-auto"><style>text{font-family:sans-serif;font-size:13px;fill:#6ee7b7;font-weight:bold;}line{stroke:#34d399;stroke-width:2;}</style>
+              <text x="90" y="20" text-anchor="middle">COO⁻</text>
+              <line x1="90" y1="25" x2="90" y2="42"/>
+              <text x="40" y="55" text-anchor="middle">⁺H₃N</text>
+              <line x1="62" y1="50" x2="80" y2="50"/>
+              <text x="90" y="55" text-anchor="middle">C</text>
+              <line x1="100" y1="50" x2="118" y2="50"/>
+              <text x="128" y="55" text-anchor="middle">H</text>
+              <line x1="90" y1="60" x2="90" y2="78"/>
+              <text x="90" y="92" text-anchor="middle">CH₂</text>
+              <line x1="90" y1="97" x2="90" y2="115"/>
+              <text x="90" y="129" text-anchor="middle">CH₂</text>
+              <line x1="90" y1="134" x2="90" y2="152"/>
+              <text x="95" y="167" text-anchor="middle">COO⁻</text>
+            </svg>`,
+            options: [
+              "Acide aspartique | Asp (D) | Polaire chargé - (Acide)",
+              "Acide glutamique | Glu (E) | Polaire chargé - (Acide)",
+              "Glutamine | Gln (Q) | Polaire non chargé",
+              "Méthionine | Met (M) | Non polaire"
+            ],
+            reponseIndex: 1,
+            gainCroquettes: 30,
+            explication: "L'Acide glutamique (Glu, E) possède une chaîne -CH₂-CH₂-COO⁻. C'est un acide aminé polaire chargé négativement (acide)."
+          }
+        ]
+      }
+
+      ,
+      // ===============================================================
+      // [CHAPITRE 3]
+      // ===============================================================
+      {
+        idChapitre: 3,
+        titreChapitre: "Chapitre 3 : Titre à définir",
+        description: "Description de votre troisième chapitre.",
+        icone: "fa-dna",
+        quizFinal: []
+      }
+    ]; // fin des chapitre
+
+    function getCuteCatSvg(taille = "w-32 h-32") {
+      let couleurSarrau = "#ffffff";
+      let couleurCol = "#a7f3d0";
+      if (chatEquipement.sarrau === 'rose') {
+        couleurSarrau = "#fce7f3";
+        couleurCol = "#f472b6";
+      } else if (chatEquipement.sarrau === 'emeraude') {
+        couleurSarrau = "#064e3b";
+        couleurCol = "#34d399";
+      } else if (chatEquipement.sarrau === 'alchimiste') {
+        couleurSarrau = "#4c1d95";
+        couleurCol = "#c084fc";
+      }
+
+      let couleurFiole = "#10b981";
+      let couleurReflet = "#a7f3d0";
+      if (chatEquipement.fiole === 'rose') {
+        couleurFiole = "#ec4899";
+        couleurReflet = "#fbcfe8";
+      } else if (chatEquipement.fiole === 'arc_en_ciel') {
+        couleurFiole = "#38bdf8";
+        couleurReflet = "#fef08a";
+      }
+
+      let chapeauSvg = "";
+      if (chatEquipement.chapeau === 'noeud_rose') {
+        chapeauSvg = `
+          <path d="M 40,35 C 30,25 30,45 42,40 C 42,45 55,45 48,35 Z" fill="#f43f5e"/>
+          <path d="M 44,40 C 55,30 55,50 44,40 Z" fill="#fb7185"/>
+          <circle cx="43" cy="38" r="3.5" fill="#ffe4e6"/>
+        `;
+      } else if (chatEquipement.chapeau === 'beret') {
+        chapeauSvg = `
+          <ellipse cx="80" cy="35" rx="35" ry="12" fill="#be123c" transform="rotate(-12 80 35)"/>
+          <circle cx="85" cy="22" r="3" fill="#9f1239"/>
+        `;
+      } else if (chatEquipement.chapeau === 'toque') {
+        chapeauSvg = `
+          <ellipse cx="100" cy="32" rx="26" ry="16" fill="#f8fafc" stroke="#cbd5e1" stroke-width="2"/>
+          <rect x="78" y="32" width="44" height="15" fill="#f8fafc" stroke="#cbd5e1" stroke-width="2"/>
+        `;
+      }
+
+      return `
+        <div class="cute-cat-anim ${taille} mx-auto relative filter drop-shadow-[0_10px_20px_rgba(16,185,129,0.35)]">
+          <svg viewBox="0 0 200 200" class="w-full h-full" xmlns="http://www.w3.org/2000/svg">
+            <path d="M 40,65 Q 18,10 68,32 Z" fill="#fbbf24" stroke="#d97706" stroke-width="3"/>
+            <path d="M 44,60 Q 28,22 62,38 Z" fill="#f472b6" opacity="0.65"/>
+            <path d="M 160,65 Q 182,10 132,32 Z" fill="#fbbf24" stroke="#d97706" stroke-width="3"/>
+            <path d="M 156,60 Q 172,22 138,38 Z" fill="#f472b6" opacity="0.65"/>
+
+            <ellipse cx="100" cy="88" rx="60" ry="52" fill="#fef3c7" stroke="#d97706" stroke-width="3"/>
+            <ellipse cx="58" cy="104" rx="11" ry="7" fill="#fb7185" opacity="0.45"/>
+            <ellipse cx="142" cy="104" rx="11" ry="7" fill="#fb7185" opacity="0.45"/>
+
+            <ellipse cx="73" cy="85" rx="10" ry="14" fill="#0f172a"/>
+            <circle cx="69" cy="79" r="5" fill="#ffffff"/>
+            <circle cx="76" cy="91" r="2.2" fill="#ffffff"/>
+            
+            <ellipse cx="127" cy="85" rx="10" ry="14" fill="#0f172a"/>
+            <circle cx="123" cy="79" r="5" fill="#ffffff"/>
+            <circle cx="130" cy="91" r="2.2" fill="#ffffff"/>
+
+            <path d="M 97,97 Q 100,94 103,97 Q 100,102 97,97 Z" fill="#f43f5e"/>
+            <path d="M 93,103 Q 97,108 100,104 Q 103,108 107,103" stroke="#92400e" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+
+            <line x1="42" y1="96" x2="18" y2="94" stroke="#b45309" stroke-width="1.8" stroke-linecap="round"/>
+            <line x1="42" y1="104" x2="16" y2="108" stroke="#b45309" stroke-width="1.8" stroke-linecap="round"/>
+            <line x1="158" y1="96" x2="182" y2="94" stroke="#b45309" stroke-width="1.8" stroke-linecap="round"/>
+            <line x1="158" y1="104" x2="184" y2="108" stroke="#b45309" stroke-width="1.8" stroke-linecap="round"/>
+
+            <circle cx="73" cy="85" r="19" fill="rgba(56, 189, 248, 0.15)" stroke="#38bdf8" stroke-width="2.5"/>
+            <circle cx="127" cy="85" r="19" fill="rgba(56, 189, 248, 0.15)" stroke="#38bdf8" stroke-width="2.5"/>
+            <path d="M 92 85 Q 100 81 108 85" stroke="#38bdf8" stroke-width="2.5" fill="none"/>
+
+            <path d="M 64,136 C 54,152 46,186 46,192 L 154,192 C 154,186 146,152 136,136 Z" fill="${couleurSarrau}" stroke="#cbd5e1" stroke-width="2.5"/>
+            <polygon points="100,138 80,158 100,172 120,158" fill="${couleurCol}"/>
+            <circle cx="100" cy="180" r="2.5" fill="#94a3b8"/>
+
+            <polygon points="135,152 160,188 120,188" fill="rgba(255, 255, 255, 0.3)" stroke="#e2e8f0" stroke-width="2"/>
+            <polygon points="128,168 156,186 124,186" fill="${couleurFiole}"/>
+            <circle cx="138" cy="174" r="2" fill="${couleurReflet}"/>
+            <circle cx="146" cy="179" r="1.5" fill="${couleurReflet}"/>
+
+            <ellipse cx="78" cy="160" rx="8" ry="7" fill="#fef3c7" stroke="#d97706" stroke-width="2"/>
+            <ellipse cx="122" cy="160" rx="8" ry="7" fill="#fef3c7" stroke="#d97706" stroke-width="2"/>
+
+            ${chapeauSvg}
+          </svg>
+        </div>
+      `;
+    }
+
+    let screen = 'menu_chapitres';
+    let currentChapterIdx = 0;
+    let fileQuestions = [];
+    let questionEnCours = null;
+    let totalQuestionsInitial = 0;
+    let questionsReussiesCompteur = 0;
+
+    const container = document.getElementById('appContainer');
+    const croquettesDisplay = document.getElementById('croquettesDisplay');
+    const btnHome = document.getElementById('btnNavigationHome');
+
+    btnHome.addEventListener('click', () => {
+      screen = 'menu_chapitres';
+      render();
+    });
+
+    function updateCroquettes(valeur) {
+      croquettes += valeur;
+      croquettesDisplay.innerText = `${croquettes} 🐟`;
+    }
+
+    function shuffle(arr) {
+      const copy = [...arr];
+      for (let i = copy.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [copy[i], copy[j]] = [copy[j], copy[i]];
+      }
+      return copy;
+    }
+
+    function render() {
+      container.innerHTML = '';
+      if (screen === 'menu_chapitres') renderMenu();
+      else if (screen === 'shop') renderShop();
+      else if (screen === 'session_niveau') renderQuestionActive();
+      else if (screen === 'victoire') renderVictoire();
+    }
+
+    function renderMenu() {
+      container.innerHTML = `
+        <div class="text-center pt-1">
+          ${getCuteCatSvg("w-28 h-28")}
+         <h2 class="text-xl font-bold text-white mt-1">Dr. Bébé Chat</h2> 
+          <p class="text-xs text-emerald-300">Choisis ton chapitre d'étude</p>
+        </div>
+
+        <div class="my-2.5">
+          <button onclick="screen='shop'; render();" class="w-full p-3 rounded-2xl bg-gradient-to-r from-pink-600 via-rose-500 to-amber-500 text-white font-bold text-xs shadow-lg hover:brightness-110 transition flex items-center justify-between border border-pink-300/40">
+            <div class="flex items-center gap-2.5">
+              <span class="text-xl">🛍️</span>
+              <div class="text-left">
+                <div class="uppercase tracking-wider font-extrabold">Dressing du Chat</div>
+                <div class="text-[10px] text-pink-100 font-medium">Personnalise le sarrau, chapeaux et fioles !</div>
+              </div>
+            </div>
+            <i class="fa-solid fa-chevron-right text-xs text-pink-200"></i>
+          </button>
+        </div>
+
+        <div class="space-y-3 my-auto py-2">
+          ${TOUS_LES_CHAPITRES.map((chap, idx) => `
+            <div class="p-4 rounded-3xl bg-slate-800/95 border-2 border-emerald-500/50 shadow-xl flex flex-col justify-between">
+              <div class="flex items-start gap-3">
+                <div class="w-11 h-11 rounded-2xl bg-emerald-500/20 border border-emerald-400/40 text-emerald-300 flex items-center justify-center text-lg shrink-0">
+                  <i class="fa-solid ${chap.icone || 'fa-dna'}"></i>
+                </div>
+                <div>
+                  <h3 class="font-extrabold text-sm text-white">${chap.titreChapitre}</h3>
+                  <p class="text-xs text-slate-300 mt-1 leading-snug">${chap.description}</p>
+                  <div class="inline-block mt-2 px-2.5 py-0.5 rounded-full bg-emerald-950 border border-emerald-400/30 text-[10px] text-emerald-300 font-bold">
+                    ${chap.quizFinal.length} question(s) prête(s)
+                  </div>
+                </div>
+              </div>
+
+              <button onclick="demarrerNiveauUnique(${idx})" class="w-full mt-3 py-2.5 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-500 hover:to-teal-400 text-white font-extrabold text-xs shadow-lg transition flex items-center justify-center gap-2">
+                <i class="fa-solid fa-play text-xs"></i> Lancer ce chapitre
+              </button>
+            </div>
+          `).join('')}
+        </div>
+
+        <div class="text-center text-[10px] text-emerald-400/70 pb-1">
+          💡 Toute erreur replace la question à la fin de la file jusqu'à réussite complète !
+        </div>
+      `;
+    }
+
+    function renderShop() {
+      container.innerHTML = `
+        <div>
+          <button onclick="screen='menu_chapitres'; render();" class="text-xs text-emerald-300 hover:text-white flex items-center gap-1.5 font-bold mb-2">
+            <i class="fa-solid fa-arrow-left"></i> Retour
+          </button>
+          
+          <div class="text-center">
+            ${getCuteCatSvg("w-24 h-24")}
+            <h3 class="font-bold text-sm text-white mt-1">Dressing de Pr. Neko</h3>
+            <p class="text-[11px] text-emerald-300">Solde : <b class="text-amber-300">${croquettes} Croquettes 🐟</b></p>
+          </div>
+        </div>
+
+        <div class="space-y-2 overflow-y-auto max-h-[380px] my-2 pr-1">
+          ${ARTICLES_SHOP.map(art => {
+            const possede = articlesAchetes.includes(art.id);
+            const estEquipe = chatEquipement[art.type] === art.id;
+
+            return `
+              <div class="p-3 bg-slate-800/80 rounded-2xl border border-slate-700 flex items-center justify-between">
+                <div class="flex items-center gap-2.5">
+                  <span class="text-2xl">${art.icone}</span>
+                  <div>
+                    <div class="font-bold text-xs text-slate-100">${art.nom}</div>
+                    <div class="text-[10px] text-slate-400">${art.desc}</div>${!possede ? `<span class="text-[10px] font-bold text-amber-300">${art.prix} 🐟</span>` : ''}
+                  </div>
+                </div>
+
+                <div>
+                  ${estEquipe ? `
+                    <span class="px-3 py-1 bg-emerald-600 text-white rounded-xl text-[10px] font-bold">Équipé</span>
+                  ` : possede ? `
+                    <button onclick="equiperObjet('${art.type}', '${art.id}')" class="px-3 py-1 bg-slate-700 hover:bg-slate-600 text-slate-200 rounded-xl text-[10px] font-bold">Mettre</button>
+                  ` : `
+                    <button onclick="acheterObjet('${art.id}', ${art.prix}, '${art.type}')" class="px-3 py-1 bg-amber-500 hover:bg-amber-400 text-slate-950 rounded-xl text-[10px] font-extrabold">Acheter</button>
+                  `}
+                </div>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      `;
+    }
+
+    window.acheterObjet = function(id, prix, type) {
+      if (croquettes >= prix) {
+        updateCroquettes(-prix);
+        articlesAchetes.push(id);
+        chatEquipement[type] = id;
+        render();
+      } else {
+        alert("Pas assez de croquettes ! Réussis un chapitre pour en accumuler 🐟");
+      }
+    };
+
+    window.equiperObjet = function(type, id) {
+      chatEquipement[type] = id;
+      render();
+    };
+
+    window.demarrerNiveauUnique = function(chapIdx = 0) {
+      currentChapterIdx = chapIdx;
+      const chapitreChoisi = TOUS_LES_CHAPITRES[currentChapterIdx];
+      
+      if (!chapitreChoisi.quizFinal || chapitreChoisi.quizFinal.length === 0) {
+        alert("Ce chapitre ne contient pas encore de questions ! Ajoute des questions dans son tableau quizFinal pour y jouer.");
+        return;
+      }
+
+      fileQuestions = shuffle([...chapitreChoisi.quizFinal]);
+      totalQuestionsInitial = fileQuestions.length;
+      questionsReussiesCompteur = 0;
+      screen = 'session_niveau';
+      prochaineQuestionDeLaFile();
+    };
+
+    function prochaineQuestionDeLaFile() {
+      if (fileQuestions.length > 0) {
+        questionEnCours = fileQuestions.shift();
+        render();
+      } else {
+        screen = 'victoire';
+        render();
+      }
+    }
+
+    function renderQuestionActive() {
+      const q = questionEnCours;
+      const restantes = fileQuestions.length + 1;
+      const pourcentage = Math.min(100, Math.round((questionsReussiesCompteur / totalQuestionsInitial) * 100));
+
+      container.innerHTML = `
+        <div>
+          <div class="flex justify-between items-center text-xs mb-2">
+            <span class="font-bold text-emerald-300">
+              <i class="fa-solid fa-atom mr-1 text-cyan-400"></i> ${q.badge || 'Exercice'}
+            </span>
+            <div class="flex items-center gap-1.5 bg-emerald-950/80 px-3 py-1 rounded-full border border-emerald-500/30 text-xs shadow-inner">
+              <span class="text-slate-400">Reste :</span>
+              <span class="font-extrabold text-amber-300">${restantes}</span>
+              <span class="text-slate-500 text-[10px]">/ ${totalQuestionsInitial}</span>
+            </div>
+          </div>
+
+          <div class="w-full bg-slate-800/90 rounded-full h-2.5 mb-2.5 border border-slate-700/60 overflow-hidden">
+            <div class="bg-gradient-to-r from-emerald-500 to-cyan-400 h-2.5 rounded-full transition-all duration-300 shadow-[0_0_10px_rgba(16,185,129,0.5)]" 
+                 style="width: ${pourcentage}%">
+            </div>
+          </div>
+
+          <div class="flex justify-between text-[11px] text-slate-400 px-1 mb-2">
+            <span>Validées : <b class="text-emerald-400">${questionsReussiesCompteur}</b></span>
+            <span>Progression : <b class="text-cyan-300">${pourcentage}%</b></span>
+          </div>
+
+          <div class="bg-slate-950 border-2 border-emerald-500/40 rounded-2xl p-3.5 flex flex-col items-center justify-center my-2 min-h-[105px] shadow-inner">
+            <pre class="molecule-font text-xs sm:text-sm text-emerald-300 font-extrabold tracking-wide leading-relaxed text-center whitespace-pre-wrap">${q.molecule}</pre>
+          </div>
+
+          <p class="text-xs text-slate-100 font-semibold text-center my-2 leading-snug">${q.question}</p>
+        </div>
+
+        <div class="grid grid-cols-1 gap-2 my-auto" id="optionsBox">
+          ${q.options.map((opt, i) => `
+            <button onclick="validerReponseNiveau(${i})" class="w-full text-left p-3 rounded-xl border border-slate-700 bg-slate-800/80 hover:border-emerald-400 hover:bg-emerald-950/40 text-slate-200 text-xs font-semibold transition">
+              ${opt}
+            </button>
+          `).join('')}
+        </div>
+
+        <div id="feedbackBox" class="min-h-[55px] flex items-center justify-center mt-2"></div>
+      `;
+    }
+
+    window.validerReponseNiveau = function(choixIndex) {
+      const q = questionEnCours;
+      const box = document.getElementById('feedbackBox');
+      const boutons = document.getElementById('optionsBox').children;
+
+      for (let btn of boutons) btn.disabled = true;
+
+      if (choixIndex === q.reponseIndex) {
+        boutons[choixIndex].classList.remove('bg-slate-800/80', 'border-slate-700');
+        boutons[choixIndex].classList.add('bg-emerald-600', 'border-emerald-400', 'text-white');
+        
+        questionsReussiesCompteur++;
+        updateCroquettes(q.gainCroquettes || 25);
+
+        box.innerHTML = `
+          <div class="text-center w-full">
+            <p class="text-emerald-400 text-xs font-bold mb-1.5">✨ Validé ! (+${q.gainCroquettes || 25} 🐟)</p>
+            <button onclick="prochaineQuestionDeLaFile()" class="w-full bg-emerald-600 hover:bg-emerald-500 py-2 rounded-xl text-white text-xs font-bold">
+              Continuer
+            </button>
+          </div>
+        `;
+      } else {
+        boutons[choixIndex].classList.remove('bg-slate-800/80', 'border-slate-700');
+        boutons[choixIndex].classList.add('bg-rose-600', 'border-rose-400', 'text-white');
+
+        fileQuestions.push(q);
+
+        box.innerHTML = `
+          <div class="text-center w-full">
+            <p class="text-rose-400 text-[11px] font-medium mb-1 leading-tight">${q.explication}</p>
+            <div class="text-amber-300 text-[10px] font-bold mb-2">🔁 Cette question reviendra plus tard !</div>
+            <button onclick="prochaineQuestionDeLaFile()" class="w-full bg-slate-700 hover:bg-slate-600 py-1.5 rounded-xl text-white text-xs font-bold">
+              Passer à la suite
+            </button>
+          </div>
+        `;
+      }
+    };
+
+    function renderVictoire() {
+      container.innerHTML = `
+        <div class="text-center my-auto">
+          ${getCuteCatSvg("w-32 h-32")}
+          <h3 class="text-lg font-black text-white mt-2">Chapitre Réussi à 100% !</h3>
+          <p class="text-xs text-emerald-300 mt-0.5">Toutes les questions ont été validées.</p>
+          
+          <div class="bg-slate-800/80 border border-emerald-500/40 rounded-2xl p-4 my-3 text-center">
+            <div class="text-3xl font-extrabold text-amber-300">+100 Croquettes 🐟</div>
+            <p class="text-[11px] text-slate-300 mt-1">Félicitations pour votre persévérance !</p>
+          </div>
+
+          <div class="space-y-2">
+            <button onclick="screen='shop'; render();" class="w-full bg-pink-600 hover:bg-pink-500 text-white font-bold py-2.5 rounded-xl text-xs transition">
+              🛍️ Aller au dressing du chat
+            </button>
+            <button onclick="demarrerNiveauUnique(${currentChapterIdx})" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2.5 rounded-xl text-xs transition">
+              <i class="fa-solid fa-rotate-right mr-1"></i> Recommencer ce chapitre
+            </button>
+            <button onclick="screen='menu_chapitres'; render();" class="w-full bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold py-2.5 rounded-xl text-xs transition">
+              Menu principal
+            </button>
+          </div>
+        </div>
+      `;
+      updateCroquettes(100);
+    }
+
+    render();
+  </script>
+</body>
+</html>
