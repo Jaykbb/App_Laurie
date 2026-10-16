@@ -1,2 +1,6 @@
 # App_Laurie
-Clique sur l'app ça va te mener sur un site web et met le en raccourcis sur ton cell
+Sur ton cell clique sur sur les 3 petits points en haut à droite 
+partage sur safarie ou google
+descent et clique sur deploiment
+clique sur le lien HTTPS
+met en raccourcis sur ton cell
