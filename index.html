@@ -57,33 +57,41 @@
   </div>
 
   <script>
-   const CLE_SAUVEGARDE = 'bioneptune_sauvegarde_v1';
-const ETAT_DEFAUT = {
-  croquettes: 120,
-  chatEquipement: { chapeau: 'aucun', sarrau: 'blanc', fiole: 'verte' },
-  articlesAchetes: ['sarrau:blanc', 'fiole:verte', 'chapeau:aucun']
-};
+    // ===============================================================
+    // SAUVEGARDE (localStorage)
+    // ===============================================================
+    const CLE_SAUVEGARDE = 'bioneptune_sauvegarde_v1';
+    const ETAT_DEFAUT = {
+      croquettes: 120,
+      chatEquipement: { chapeau: 'aucun', sarrau: 'blanc', fiole: 'verte', langue: 'aucune' },
+      articlesAchetes: ['sarrau:blanc', 'fiole:verte', 'chapeau:aucun', 'langue:aucune']
+    };
 
-function chargerSauvegarde() {
-  try {
-    const brut = localStorage.getItem(CLE_SAUVEGARDE);
-    if (brut) return { ...ETAT_DEFAUT, ...JSON.parse(brut) };
-  } catch (e) {}
-  return JSON.parse(JSON.stringify(ETAT_DEFAUT));
-}
+    function chargerSauvegarde() {
+      try {
+        const brut = localStorage.getItem(CLE_SAUVEGARDE);
+        if (brut) return { ...ETAT_DEFAUT, ...JSON.parse(brut) };
+      } catch (e) {}
+      return JSON.parse(JSON.stringify(ETAT_DEFAUT));
+    }
 
-const etat = chargerSauvegarde();
-let croquettes = etat.croquettes;
-let chatEquipement = etat.chatEquipement;
-let articlesAchetes = etat.articlesAchetes;
+    const etat = chargerSauvegarde();
+    let croquettes = etat.croquettes;
+    let chatEquipement = { ...ETAT_DEFAUT.chatEquipement, ...etat.chatEquipement };
+    let articlesAchetes = etat.articlesAchetes;
 
-function sauvegarder() {
-  try {
-    localStorage.setItem(CLE_SAUVEGARDE, JSON.stringify({ croquettes, chatEquipement, articlesAchetes }));
-  } catch (e) {}
-}
+    function sauvegarder() {
+      try {
+        localStorage.setItem(CLE_SAUVEGARDE, JSON.stringify({ croquettes, chatEquipement, articlesAchetes }));
+      } catch (e) {}
+    }
 
+    // ===============================================================
+    // BOUTIQUE
+    // ===============================================================
     const ARTICLES_SHOP = [
+      { id: 'langue_rose', type: 'langue', nom: 'Petite Langue Rose', prix: 40, icone: '😛', desc: 'Une adorable petite langue qui dépasse' },
+      { id: 'langue_cote', type: 'langue', nom: 'Langue Coquine', prix: 60, icone: '😜', desc: 'Sur le côté, pour un air espiègle' },
       { id: 'noeud_rose', type: 'chapeau', nom: 'Nœud Rose Kawaii', prix: 50, icone: '🎀', desc: 'Un joli ruban rose bonbon' },
       { id: 'beret', type: 'chapeau', nom: 'Béret d\'Artiste', prix: 80, icone: '🎨', desc: 'Pour les sessions de labo' },
       { id: 'toque', type: 'chapeau', nom: 'Toque de Chimie', prix: 150, icone: '👨‍🍳', desc: 'Style maître chimiste' },
@@ -94,6 +102,8 @@ function sauvegarder() {
       { id: 'arc_en_ciel', type: 'fiole', nom: 'Élixir Multicolore', prix: 140, icone: '🌈', desc: 'Changement de phase' }
     ];
 
+    // Valeur "rien d'équipé" pour les types qu'on peut retirer
+    const AUCUN = { chapeau: 'aucun', langue: 'aucune' };
 
     const TOUS_LES_CHAPITRES = [
       {
@@ -827,7 +837,7 @@ function sauvegarder() {
             ],
             reponseIndex: 1,
             gainCroquettes: 30,
-            explication: "L'Histidine (His, H) comporte un cycle imidazole protoné positively (NH⁺). C'est un acide aminé basique chargé positivement."
+            explication: "L'Histidine (His, H) comporte un cycle imidazole protoné positivement (NH⁺). C'est un acide aminé basique chargé positivement."
           },
 
           // --- 19. ACIDE ASPARTIQUE ---
@@ -903,20 +913,25 @@ function sauvegarder() {
       }
     ]; // fin des chapitre
 
+    // ===============================================================
+    // LE CHAT
+    // ===============================================================
     function getCuteCatSvg(taille = "w-32 h-32") {
-      let couleurSarrau = "#ffffff";
-      let couleurCol = "#a7f3d0";
-      if (chatEquipement.sarrau === 'rose') {
-        couleurSarrau = "#fce7f3";
-        couleurCol = "#f472b6";
-      } else if (chatEquipement.sarrau === 'emeraude') {
-        couleurSarrau = "#064e3b";
-        couleurCol = "#34d399";
-      } else if (chatEquipement.sarrau === 'alchimiste') {
-        couleurSarrau = "#4c1d95";
-        couleurCol = "#c084fc";
-      }
+      // --- Sarrau ---
+      const SARRAUS = {
+        blanc:      { tissu: "#ffffff", contour: "#cbd5e1", chemise: "#6ee7b7", deco: "" },
+        rose:       { tissu: "#fce7f3", contour: "#f9a8d4", chemise: "#f472b6", deco: "" },
+        emeraude:   { tissu: "#065f46", contour: "#34d399", chemise: "#a7f3d0", deco: "" },
+        alchimiste: {
+          tissu: "#4c1d95", contour: "#c084fc", chemise: "#fbbf24",
+          deco: `<text x="62" y="176" font-size="9" fill="#fbbf24">✦</text>
+                 <text x="128" y="170" font-size="7" fill="#fbbf24">✦</text>
+                 <text x="76" y="194" font-size="6" fill="#fbbf24">✦</text>`
+        }
+      };
+      const s = SARRAUS[chatEquipement.sarrau] || SARRAUS.blanc;
 
+      // --- Fiole ---
       let couleurFiole = "#10b981";
       let couleurReflet = "#a7f3d0";
       if (chatEquipement.fiole === 'rose') {
@@ -927,68 +942,125 @@ function sauvegarder() {
         couleurReflet = "#fef08a";
       }
 
+      // --- Chapeaux ---
       let chapeauSvg = "";
       if (chatEquipement.chapeau === 'noeud_rose') {
         chapeauSvg = `
-          <path d="M 40,35 C 30,25 30,45 42,40 C 42,45 55,45 48,35 Z" fill="#f43f5e"/>
-          <path d="M 44,40 C 55,30 55,50 44,40 Z" fill="#fb7185"/>
-          <circle cx="43" cy="38" r="3.5" fill="#ffe4e6"/>
+          <path d="M 100,40 C 86,26 76,42 84,52 C 92,54 98,48 100,40 Z" fill="#f43f5e" stroke="#be123c" stroke-width="1.5"/>
+          <path d="M 100,40 C 114,26 124,42 116,52 C 108,54 102,48 100,40 Z" fill="#f43f5e" stroke="#be123c" stroke-width="1.5"/>
+          <circle cx="100" cy="43" r="5" fill="#fb7185" stroke="#be123c" stroke-width="1.5"/>
         `;
       } else if (chatEquipement.chapeau === 'beret') {
         chapeauSvg = `
-          <ellipse cx="80" cy="35" rx="35" ry="12" fill="#be123c" transform="rotate(-12 80 35)"/>
-          <circle cx="85" cy="22" r="3" fill="#9f1239"/>
+          <ellipse cx="100" cy="42" rx="40" ry="14" fill="#be123c" stroke="#881337" stroke-width="2" transform="rotate(-10 100 42)"/>
+          <ellipse cx="94" cy="38" rx="18" ry="5" fill="#e11d48" opacity="0.6" transform="rotate(-10 100 42)"/>
+          <circle cx="104" cy="29" r="3.5" fill="#9f1239"/>
         `;
       } else if (chatEquipement.chapeau === 'toque') {
         chapeauSvg = `
-          <ellipse cx="100" cy="32" rx="26" ry="16" fill="#f8fafc" stroke="#cbd5e1" stroke-width="2"/>
-          <rect x="78" y="32" width="44" height="15" fill="#f8fafc" stroke="#cbd5e1" stroke-width="2"/>
+          <circle cx="82" cy="22" r="14" fill="#f8fafc" stroke="#cbd5e1" stroke-width="2"/>
+          <circle cx="100" cy="16" r="16" fill="#f8fafc" stroke="#cbd5e1" stroke-width="2"/>
+          <circle cx="118" cy="22" r="14" fill="#f8fafc" stroke="#cbd5e1" stroke-width="2"/>
+          <rect x="80" y="28" width="40" height="18" rx="3" fill="#f8fafc" stroke="#cbd5e1" stroke-width="2"/>
         `;
       }
+
+      // --- Langue ---
+      const langueForme = `
+        <path d="M 95,115.5 Q 100,113.5 105,115.5 L 106,123 Q 106,131 100,131 Q 94,131 94,123 Z" fill="#f9a8b8" stroke="#d9667f" stroke-width="1.5" stroke-linejoin="round"/>
+        <line x1="100" y1="118" x2="100" y2="124" stroke="#e07a93" stroke-width="1.4" stroke-linecap="round"/>
+        <circle cx="102.5" cy="125" r="1.6" fill="#fff" opacity="0.55"/>
+      `;
+      let langueSvg = "";
+      if (chatEquipement.langue === 'langue_rose') {
+        langueSvg = langueForme;
+      } else if (chatEquipement.langue === 'langue_cote') {
+        langueSvg = `<g transform="rotate(-20 100 114)">${langueForme}</g>`;
+      }
+
+      const tissuStyle = `fill="${s.tissu}" stroke="${s.contour}" stroke-width="2.5" stroke-linejoin="round"`;
 
       return `
         <div class="cute-cat-anim ${taille} mx-auto relative filter drop-shadow-[0_10px_20px_rgba(16,185,129,0.35)]">
           <svg viewBox="0 0 200 200" class="w-full h-full" xmlns="http://www.w3.org/2000/svg">
-            <path d="M 40,65 Q 18,10 68,32 Z" fill="#fbbf24" stroke="#d97706" stroke-width="3"/>
-            <path d="M 44,60 Q 28,22 62,38 Z" fill="#f472b6" opacity="0.65"/>
-            <path d="M 160,65 Q 182,10 132,32 Z" fill="#fbbf24" stroke="#d97706" stroke-width="3"/>
-            <path d="M 156,60 Q 172,22 138,38 Z" fill="#f472b6" opacity="0.65"/>
+            <defs>
+              <radialGradient id="fourrure" cx="50%" cy="40%" r="65%">
+                <stop offset="0%" stop-color="#9a6652"/><stop offset="100%" stop-color="#6b3f31"/>
+              </radialGradient>
+              <radialGradient id="iris" cx="50%" cy="40%" r="60%">
+                <stop offset="0%" stop-color="#c8f5c4"/><stop offset="100%" stop-color="#2f8f5b"/>
+              </radialGradient>
+              <linearGradient id="ombreSarrau" x1="0" y1="0" x2="1" y2="0">
+                <stop offset="0%" stop-color="#000" stop-opacity="0.12"/>
+                <stop offset="50%" stop-color="#000" stop-opacity="0"/>
+                <stop offset="100%" stop-color="#000" stop-opacity="0.16"/>
+              </linearGradient>
+            </defs>
 
-            <ellipse cx="100" cy="88" rx="60" ry="52" fill="#fef3c7" stroke="#d97706" stroke-width="3"/>
-            <ellipse cx="58" cy="104" rx="11" ry="7" fill="#fb7185" opacity="0.45"/>
-            <ellipse cx="142" cy="104" rx="11" ry="7" fill="#fb7185" opacity="0.45"/>
+            <!-- Corps du sarrau -->
+            <path d="M 52,200 C 52,152 66,132 100,132 C 134,132 148,152 148,200 Z" ${tissuStyle}/>
+            <path d="M 52,200 C 52,152 66,132 100,132 C 134,132 148,152 148,200 Z" fill="url(#ombreSarrau)"/>
 
-            <ellipse cx="73" cy="85" rx="10" ry="14" fill="#0f172a"/>
-            <circle cx="69" cy="79" r="5" fill="#ffffff"/>
-            <circle cx="76" cy="91" r="2.2" fill="#ffffff"/>
-            
-            <ellipse cx="127" cy="85" rx="10" ry="14" fill="#0f172a"/>
-            <circle cx="123" cy="79" r="5" fill="#ffffff"/>
-            <circle cx="130" cy="91" r="2.2" fill="#ffffff"/>
+            <!-- Manches -->
+            <path d="M 62,148 C 48,168 50,188 62,194 L 80,190 C 76,176 78,162 82,148 Z" ${tissuStyle}/>
+            <path d="M 138,148 C 152,168 150,186 140,192 L 122,188 C 126,176 124,162 118,148 Z" ${tissuStyle}/>
 
-            <path d="M 97,97 Q 100,94 103,97 Q 100,102 97,97 Z" fill="#f43f5e"/>
-            <path d="M 93,103 Q 97,108 100,104 Q 103,108 107,103" stroke="#92400e" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+            <!-- Chemise + revers -->
+            <polygon points="100,136 84,140 100,178 116,140" fill="${s.chemise}"/>
+            <path d="M 82,134 L 100,174 L 86,180 L 68,146 Z" ${tissuStyle}/>
+            <path d="M 118,134 L 100,174 L 114,180 L 132,146 Z" ${tissuStyle}/>
+            <line x1="100" y1="178" x2="100" y2="200" stroke="${s.contour}" stroke-width="2"/>
+            <circle cx="95" cy="186" r="2.4" fill="#94a3b8"/>
+            <circle cx="95" cy="195" r="2.4" fill="#94a3b8"/>
 
-            <line x1="42" y1="96" x2="18" y2="94" stroke="#b45309" stroke-width="1.8" stroke-linecap="round"/>
-            <line x1="42" y1="104" x2="16" y2="108" stroke="#b45309" stroke-width="1.8" stroke-linecap="round"/>
-            <line x1="158" y1="96" x2="182" y2="94" stroke="#b45309" stroke-width="1.8" stroke-linecap="round"/>
-            <line x1="158" y1="104" x2="184" y2="108" stroke="#b45309" stroke-width="1.8" stroke-linecap="round"/>
+            <!-- Poche + stylos -->
+            <rect x="108" y="184" width="22" height="14" rx="3" ${tissuStyle.replace('2.5', '2')}/>
+            <rect x="116" y="177" width="3.5" height="11" rx="1.5" fill="#3b82f6"/>
+            <rect x="122" y="179" width="3.5" height="9" rx="1.5" fill="#ef4444"/>
 
-            <circle cx="73" cy="85" r="19" fill="rgba(56, 189, 248, 0.15)" stroke="#38bdf8" stroke-width="2.5"/>
-            <circle cx="127" cy="85" r="19" fill="rgba(56, 189, 248, 0.15)" stroke="#38bdf8" stroke-width="2.5"/>
-            <path d="M 92 85 Q 100 81 108 85" stroke="#38bdf8" stroke-width="2.5" fill="none"/>
+            ${s.deco}
 
-            <path d="M 64,136 C 54,152 46,186 46,192 L 154,192 C 154,186 146,152 136,136 Z" fill="${couleurSarrau}" stroke="#cbd5e1" stroke-width="2.5"/>
-            <polygon points="100,138 80,158 100,172 120,158" fill="${couleurCol}"/>
-            <circle cx="100" cy="180" r="2.5" fill="#94a3b8"/>
+            <!-- Fiole -->
+            <polygon points="146,152 158,152 158,162 170,188 134,188 146,162" fill="rgba(255,255,255,0.3)" stroke="#e2e8f0" stroke-width="2" stroke-linejoin="round"/>
+            <polygon points="139.5,176 164.5,176 170,188 134,188" fill="${couleurFiole}"/>
+            <circle cx="146" cy="181" r="2" fill="${couleurReflet}"/>
+            <circle cx="156" cy="183" r="1.5" fill="${couleurReflet}"/>
+            <rect x="144" y="149" width="16" height="4" rx="2" fill="#e2e8f0" stroke="#cbd5e1" stroke-width="1.5"/>
 
-            <polygon points="135,152 160,188 120,188" fill="rgba(255, 255, 255, 0.3)" stroke="#e2e8f0" stroke-width="2"/>
-            <polygon points="128,168 156,186 124,186" fill="${couleurFiole}"/>
-            <circle cx="138" cy="174" r="2" fill="${couleurReflet}"/>
-            <circle cx="146" cy="179" r="1.5" fill="${couleurReflet}"/>
+            <!-- Pattes -->
+            <ellipse cx="68" cy="193" rx="9" ry="7" fill="#8a5846" stroke="#4e2c22" stroke-width="2"/>
+            <ellipse cx="136" cy="176" rx="9" ry="8" fill="#8a5846" stroke="#4e2c22" stroke-width="2"/>
 
-            <ellipse cx="78" cy="160" rx="8" ry="7" fill="#fef3c7" stroke="#d97706" stroke-width="2"/>
-            <ellipse cx="122" cy="160" rx="8" ry="7" fill="#fef3c7" stroke="#d97706" stroke-width="2"/>
+            <!-- Oreilles -->
+            <path d="M 46,62 C 40,38 52,28 62,32 C 74,38 80,46 82,52 Z" fill="#6b3f31" stroke="#4e2c22" stroke-width="2.5" stroke-linejoin="round"/>
+            <path d="M 52,56 C 49,42 55,37 61,39 C 68,43 72,47 74,52 Z" fill="#b27a69"/>
+            <path d="M 154,62 C 160,38 148,28 138,32 C 126,38 120,46 118,52 Z" fill="#6b3f31" stroke="#4e2c22" stroke-width="2.5" stroke-linejoin="round"/>
+            <path d="M 148,56 C 151,42 145,37 139,39 C 132,43 128,47 126,52 Z" fill="#b27a69"/>
+
+            <!-- Tête ronde chocolat -->
+            <ellipse cx="100" cy="90" rx="58" ry="50" fill="url(#fourrure)" stroke="#4e2c22" stroke-width="2.5"/>
+            <ellipse cx="66" cy="110" rx="22" ry="16" fill="#a8735f" opacity="0.55"/>
+            <ellipse cx="134" cy="110" rx="22" ry="16" fill="#a8735f" opacity="0.55"/>
+            <ellipse cx="100" cy="112" rx="17" ry="12" fill="#b8826d" opacity="0.8"/>
+
+            <!-- Yeux verts -->
+            <ellipse cx="74" cy="86" rx="13" ry="14" fill="url(#iris)" stroke="#2b1810" stroke-width="2"/>
+            <circle cx="74" cy="87" r="9.5" fill="#0f172a"/>
+            <circle cx="69" cy="81" r="4" fill="#fff"/>
+            <circle cx="79" cy="92" r="2.3" fill="#fff"/>
+            <ellipse cx="126" cy="86" rx="13" ry="14" fill="url(#iris)" stroke="#2b1810" stroke-width="2"/>
+            <circle cx="126" cy="87" r="9.5" fill="#0f172a"/>
+            <circle cx="121" cy="81" r="4" fill="#fff"/>
+            <circle cx="131" cy="92" r="2.3" fill="#fff"/>
+
+            <!-- Nez, langue, bouche, moustaches -->
+            <path d="M 94,100 Q 100,96 106,100 Q 103,107 100,108 Q 97,107 94,100 Z" fill="#c98b7a" stroke="#8a5546" stroke-width="1.2"/>
+            ${langueSvg}
+            <path d="M 100,108 L 100,113 M 100,113 Q 94,119 88,114 M 100,113 Q 106,119 112,114" stroke="#4e2c22" stroke-width="2" fill="none" stroke-linecap="round"/>
+            <g stroke="#f5e6dc" stroke-width="1.6" stroke-linecap="round" opacity="0.9">
+              <line x1="72" y1="112" x2="36" y2="105"/><line x1="72" y1="117" x2="38" y2="121"/>
+              <line x1="128" y1="112" x2="164" y2="105"/><line x1="128" y1="117" x2="162" y2="121"/>
+            </g>
 
             ${chapeauSvg}
           </svg>
@@ -996,6 +1068,9 @@ function sauvegarder() {
       `;
     }
 
+    // ===============================================================
+    // LOGIQUE DE L'APP
+    // ===============================================================
     let screen = 'menu_chapitres';
     let currentChapterIdx = 0;
     let fileQuestions = [];
@@ -1049,7 +1124,7 @@ function sauvegarder() {
               <span class="text-xl">🛍️</span>
               <div class="text-left">
                 <div class="uppercase tracking-wider font-extrabold">Dressing du Chat</div>
-                <div class="text-[10px] text-pink-100 font-medium">Personnalise le sarrau, chapeaux et fioles !</div>
+                <div class="text-[10px] text-pink-100 font-medium">Personnalise le sarrau, chapeaux, fioles et langues !</div>
               </div>
             </div>
             <i class="fa-solid fa-chevron-right text-xs text-pink-200"></i>
@@ -1115,9 +1190,11 @@ function sauvegarder() {
                 </div>
 
                 <div>
-                  ${estEquipe ? `
+                  ${estEquipe ? (AUCUN[art.type] ? `
+                    <button onclick="equiperObjet('${art.type}', '${AUCUN[art.type]}')" class="px-3 py-1 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-[10px] font-bold">Retirer</button>
+                  ` : `
                     <span class="px-3 py-1 bg-emerald-600 text-white rounded-xl text-[10px] font-bold">Équipé</span>
-                  ` : possede ? `
+                  `) : possede ? `
                     <button onclick="equiperObjet('${art.type}', '${art.id}')" class="px-3 py-1 bg-slate-700 hover:bg-slate-600 text-slate-200 rounded-xl text-[10px] font-bold">Mettre</button>
                   ` : `
                     <button onclick="acheterObjet('${art.id}', ${art.prix}, '${art.type}')" class="px-3 py-1 bg-amber-500 hover:bg-amber-400 text-slate-950 rounded-xl text-[10px] font-extrabold">Acheter</button>
@@ -1131,24 +1208,22 @@ function sauvegarder() {
     }
 
     window.acheterObjet = function(id, prix, type) {
-  if (croquettes >= prix) {
-    updateCroquettes(-prix);
-    articlesAchetes.push(type + ':' + id);
-    chatEquipement[type] = id;
-    sauvegarder();
-    render();
-  } else {
-    alert("Pas assez de croquettes ! Réussis un chapitre pour en accumuler 🐟");
-  }
-};
+      if (croquettes >= prix) {
+        updateCroquettes(-prix);
+        articlesAchetes.push(type + ':' + id);
+        chatEquipement[type] = id;
+        sauvegarder();
+        render();
+      } else {
+        alert("Pas assez de croquettes ! Réussis un chapitre pour en accumuler 🐟");
+      }
+    };
 
-window.equiperObjet = function(type, id) {
-  chatEquipement[type] = id;
-  sauvegarder();
-  render();
-};
-
-  
+    window.equiperObjet = function(type, id) {
+      chatEquipement[type] = id;
+      sauvegarder();
+      render();
+    };
 
     window.demarrerNiveauUnique = function(chapIdx = 0) {
       currentChapterIdx = chapIdx;
@@ -1291,7 +1366,9 @@ window.equiperObjet = function(type, id) {
       `;
       updateCroquettes(100);
     }
-croquettesDisplay.innerText = `${croquettes} 🐟`;
+
+    // Affiche le solde sauvegardé au démarrage
+    croquettesDisplay.innerText = `${croquettes} 🐟`;
     render();
   </script>
 </body>
