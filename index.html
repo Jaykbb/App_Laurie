@@ -57,12 +57,31 @@
   </div>
 
   <script>
-    let croquettes = 120;
-    let chatEquipement = {
-      chapeau: 'aucun',
-      sarrau: 'blanc',
-      fiole: 'verte'
-    };
+   const CLE_SAUVEGARDE = 'bioneptune_sauvegarde_v1';
+const ETAT_DEFAUT = {
+  croquettes: 120,
+  chatEquipement: { chapeau: 'aucun', sarrau: 'blanc', fiole: 'verte' },
+  articlesAchetes: ['sarrau:blanc', 'fiole:verte', 'chapeau:aucun']
+};
+
+function chargerSauvegarde() {
+  try {
+    const brut = localStorage.getItem(CLE_SAUVEGARDE);
+    if (brut) return { ...ETAT_DEFAUT, ...JSON.parse(brut) };
+  } catch (e) {}
+  return JSON.parse(JSON.stringify(ETAT_DEFAUT));
+}
+
+const etat = chargerSauvegarde();
+let croquettes = etat.croquettes;
+let chatEquipement = etat.chatEquipement;
+let articlesAchetes = etat.articlesAchetes;
+
+function sauvegarder() {
+  try {
+    localStorage.setItem(CLE_SAUVEGARDE, JSON.stringify({ croquettes, chatEquipement, articlesAchetes }));
+  } catch (e) {}
+}
 
     const ARTICLES_SHOP = [
       { id: 'noeud_rose', type: 'chapeau', nom: 'Nœud Rose Kawaii', prix: 50, icone: '🎀', desc: 'Un joli ruban rose bonbon' },
@@ -75,7 +94,6 @@
       { id: 'arc_en_ciel', type: 'fiole', nom: 'Élixir Multicolore', prix: 140, icone: '🌈', desc: 'Changement de phase' }
     ];
 
-    let articlesAchetes = ['blanc', 'verte', 'aucun'];
 
     const TOUS_LES_CHAPITRES = [
       {
@@ -997,6 +1015,7 @@
     function updateCroquettes(valeur) {
       croquettes += valeur;
       croquettesDisplay.innerText = `${croquettes} 🐟`;
+      sauvegarder();
     }
 
     function shuffle(arr) {
@@ -1082,7 +1101,7 @@
 
         <div class="space-y-2 overflow-y-auto max-h-[380px] my-2 pr-1">
           ${ARTICLES_SHOP.map(art => {
-            const possede = articlesAchetes.includes(art.id);
+            const possede = articlesAchetes.includes(art.type + ':' + art.id);
             const estEquipe = chatEquipement[art.type] === art.id;
 
             return `
@@ -1112,20 +1131,24 @@
     }
 
     window.acheterObjet = function(id, prix, type) {
-      if (croquettes >= prix) {
-        updateCroquettes(-prix);
-        articlesAchetes.push(id);
-        chatEquipement[type] = id;
-        render();
-      } else {
-        alert("Pas assez de croquettes ! Réussis un chapitre pour en accumuler 🐟");
-      }
-    };
+  if (croquettes >= prix) {
+    updateCroquettes(-prix);
+    articlesAchetes.push(type + ':' + id);
+    chatEquipement[type] = id;
+    sauvegarder();
+    render();
+  } else {
+    alert("Pas assez de croquettes ! Réussis un chapitre pour en accumuler 🐟");
+  }
+};
 
-    window.equiperObjet = function(type, id) {
-      chatEquipement[type] = id;
-      render();
-    };
+window.equiperObjet = function(type, id) {
+  chatEquipement[type] = id;
+  sauvegarder();
+  render();
+};
+
+  
 
     window.demarrerNiveauUnique = function(chapIdx = 0) {
       currentChapterIdx = chapIdx;
@@ -1268,7 +1291,7 @@
       `;
       updateCroquettes(100);
     }
-
+croquettesDisplay.innerText = `${croquettes} 🐟`;
     render();
   </script>
 </body>
